@@ -17,6 +17,7 @@ SRCS    = $(SRCDIR)/main.c \
 OBJS    = $(SRCS:.c=.o)
 TARGET  = calculinux-config
 PREFIX  = /usr
+SYSTEMD_DIR ?= $(PREFIX)/lib/systemd/system
 
 .PHONY: all clean install uninstall check
 
@@ -34,14 +35,14 @@ install: $(TARGET)
 	install -Dm755 scripts/calculinux-leds $(DESTDIR)$(PREFIX)/sbin/calculinux-leds
 	install -Dm644 config/leds.default $(DESTDIR)/etc/default/leds
 	install -Dm644 systemd/calculinux-leds.service \
-		$(DESTDIR)$(PREFIX)/lib/systemd/system/calculinux-leds.service
+		$(DESTDIR)$(SYSTEMD_DIR)/calculinux-leds.service
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
 	rm -f $(DESTDIR)$(PREFIX)/bin/ccfg
 	rm -f $(DESTDIR)$(PREFIX)/sbin/calculinux-leds
 	rm -f $(DESTDIR)/etc/default/leds
-	rm -f $(DESTDIR)$(PREFIX)/lib/systemd/system/calculinux-leds.service
+	rm -f $(DESTDIR)$(SYSTEMD_DIR)/calculinux-leds.service
 
 check:
 	bash tests/check.sh
