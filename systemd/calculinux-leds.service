@@ -1,0 +1,13 @@
+[Unit]
+Description=Apply Calculinux LED / backlight defaults
+Documentation=file:///usr/sbin/calculinux-leds
+After=sysinit.target local-fs.target
+Before=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/calculinux-leds apply
+
+[Install]
+WantedBy=multi-user.target

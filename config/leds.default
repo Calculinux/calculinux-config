@@ -1,0 +1,16 @@
+# LED / backlight policy for Calculinux (applied by calculinux-leds).
+# Changes take effect immediately via `calculinux-leds apply` (or the
+# calculinux-leds.service oneshot at boot). DT defaults remain for early boot.
+#
+# Empty brightness values mean "leave current hardware state alone".
+
+# Lyra board GPIO LED (/sys/class/leds/luckfox_lyra:user_led)
+LYRA_LED_TRIGGER=heartbeat
+LYRA_LED_BRIGHTNESS=1
+
+# PicoCalc keyboard backlight (/sys/class/leds/picocalc_mfd_led:kbd_backlight)
+KBD_LED_TRIGGER=backlight
+KBD_LED_BRIGHTNESS=
+
+# LCD panel backlight (/sys/class/backlight/*) — 0..max_brightness
+LCD_BRIGHTNESS=

@@ -1,0 +1,87 @@
+#!/bin/sh
+# Apply /etc/default/leds to sysfs LED and backlight class devices.
+# Usage: calculinux-leds apply
+#
+# Test hook: SYSFS_ROOT=/path/to/fake/sys overrides /sys
+#            LEDS_DEFAULT=/path/to/leds.default overrides /etc/default/leds
+
+set -eu
+
+DEFAULTS="${LEDS_DEFAULT:-/etc/default/leds}"
+SYSFS_ROOT="${SYSFS_ROOT:-/sys}"
+
+LYRA_LED_TRIGGER=heartbeat
+LYRA_LED_BRIGHTNESS=1
+KBD_LED_TRIGGER=backlight
+KBD_LED_BRIGHTNESS=
+LCD_BRIGHTNESS=
+
+LYRA_LED_NAME="luckfox_lyra:user_led"
+KBD_LED_NAME="picocalc_mfd_led:kbd_backlight"
+
+if [ -f "$DEFAULTS" ]; then
+	# shellcheck disable=SC1090
+	. "$DEFAULTS"
+fi
+
+usage() {
+	echo "Usage: $0 apply" >&2
+	exit 1
+}
+
+[ "${1:-}" = "apply" ] || usage
+
+write_file() {
+	path=$1
+	val=$2
+	if [ ! -e "$path" ]; then
+		return 0
+	fi
+	# ponytail: sysfs write failures are non-fatal (missing trigger, RO, etc.)
+	printf '%s\n' "$val" >"$path" 2>/dev/null || true
+}
+
+set_led_trigger() {
+	led_dir=$1
+	trigger=$2
+	[ -n "$trigger" ] || return 0
+	[ -d "$led_dir" ] || return 0
+	write_file "$led_dir/trigger" "$trigger"
+}
+
+set_led_brightness() {
+	led_dir=$1
+	brightness=$2
+	[ -n "$brightness" ] || return 0
+	[ -d "$led_dir" ] || return 0
+	write_file "$led_dir/brightness" "$brightness"
+}
+
+# First matching backlight under SYSFS_ROOT/class/backlight/
+find_backlight() {
+	dir="$SYSFS_ROOT/class/backlight"
+	[ -d "$dir" ] || return 0
+	for d in "$dir"/*; do
+		[ -d "$d" ] || continue
+		printf '%s\n' "$d"
+		return 0
+	done
+}
+
+lyra="$SYSFS_ROOT/class/leds/$LYRA_LED_NAME"
+kbd="$SYSFS_ROOT/class/leds/$KBD_LED_NAME"
+
+set_led_trigger "$lyra" "$LYRA_LED_TRIGGER"
+set_led_brightness "$lyra" "$LYRA_LED_BRIGHTNESS"
+
+set_led_trigger "$kbd" "$KBD_LED_TRIGGER"
+set_led_brightness "$kbd" "$KBD_LED_BRIGHTNESS"
+
+if [ -n "${LCD_BRIGHTNESS:-}" ]; then
+	bkl=$(find_backlight || true)
+	if [ -n "$bkl" ]; then
+		write_file "$bkl/brightness" "$LCD_BRIGHTNESS"
+	fi
+fi
+
+echo "calculinux-leds: applied $DEFAULTS"
