@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    name: Compile (${{ matrix.compiler }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang libncurses-dev pkg-config
+
+      - name: Build with -Werror
+        env:
+          CC: ${{ matrix.compiler }}
+        run: make clean && make all
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses-dev pkg-config
+
+      - name: Self-check (overlay conf + fake sysfs LEDs)
+        run: make check
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install linters
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang clang-tidy \
+            cppcheck shellcheck libncurses-dev pkg-config
+
+      - name: Compiler lint (-fsyntax-only -Werror)
+        run: make lint
+
+      - name: clang-tidy
+        run: make tidy
+
+      - name: cppcheck
+        run: make cppcheck
+
+      - name: shellcheck
+        run: make shellcheck

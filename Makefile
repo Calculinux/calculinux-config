@@ -1,7 +1,7 @@
-CC      = gcc
-CFLAGS  = -Wall -Wextra -std=c11 -g \
-           $(shell pkg-config --cflags ncurses)
-LIBS    = $(shell pkg-config --libs ncurses)
+CC      ?= gcc
+WARNFLAGS = -std=c11 -Wall -Wextra -Werror
+CFLAGS  ?= $(WARNFLAGS) -g $(shell pkg-config --cflags ncurses)
+LIBS    ?= $(shell pkg-config --libs ncurses)
 
 SRCDIR  = src
 SRCS    = $(SRCDIR)/main.c \
@@ -19,7 +19,11 @@ TARGET  = calculinux-config
 PREFIX  = /usr
 SYSTEMD_DIR ?= $(PREFIX)/lib/systemd/system
 
-.PHONY: all clean install uninstall check
+CLANG_TIDY ?= clang-tidy
+CPPCHECK   ?= cppcheck
+SHELLCHECK ?= shellcheck
+
+.PHONY: all clean install uninstall check lint tidy cppcheck shellcheck test
 
 all: $(TARGET)
 
@@ -44,7 +48,21 @@ uninstall:
 	rm -f $(DESTDIR)/etc/default/leds
 	rm -f $(DESTDIR)$(SYSTEMD_DIR)/calculinux-leds.service
 
-check:
+# Compiler-as-linter: catch warnings as errors without linking.
+lint:
+	$(CC) -fsyntax-only $(WARNFLAGS) -g $(shell pkg-config --cflags ncurses) -I$(SRCDIR) $(SRCS)
+
+tidy:
+	$(CLANG_TIDY) $(SRCS) -- $(WARNFLAGS) -g $(shell pkg-config --cflags ncurses) -I$(SRCDIR)
+
+cppcheck:
+	$(CPPCHECK) --error-exitcode=1 --std=c11 --enable=warning,style,performance \
+		--suppress=missingIncludeSystem --inline-suppr -I$(SRCDIR) $(SRCS)
+
+shellcheck:
+	$(SHELLCHECK) -x scripts/calculinux-leds tests/check.sh
+
+test check:
 	bash tests/check.sh
 
 clean:

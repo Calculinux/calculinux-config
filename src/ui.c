@@ -98,9 +98,11 @@ void ui_set_hints(const char *hints)
 
 void ui_set_items(const UiItem *items, int count)
 {
-	g_count = (count > UI_MAX_ITEMS) ? UI_MAX_ITEMS : (count < 0 ? 0 : count);
-	if (g_count > 0 && items)
+	g_count = 0;
+	if (items && count > 0) {
+		g_count = (count > UI_MAX_ITEMS) ? UI_MAX_ITEMS : count;
 		memcpy(g_items, items, (size_t)g_count * sizeof(UiItem));
+	}
 	if (g_cursor >= g_count)
 		g_cursor = g_count > 0 ? g_count - 1 : 0;
 	if (g_offset > g_cursor)

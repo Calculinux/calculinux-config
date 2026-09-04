@@ -26,10 +26,14 @@ Designed for ~40x20 (unifont) and ~53x26 (default cruft font).
 ```bash
 make
 sudo make install
-make check
+make check    # overlay + LED self-tests
+make lint     # -Werror syntax-only
+make tidy     # clang-tidy
+make cppcheck
+make shellcheck
 ```
 
-Requires `ncurses` (`pkg-config ncurses`).
+Requires `ncurses` (`pkg-config ncurses`). CI runs compile (gcc/clang), tests, and lint on every push/PR.
 
 ## LEDs
 

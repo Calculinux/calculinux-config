@@ -16,8 +16,8 @@
 #include "usb.h"
 
 enum {
-	ID_BACK = -1,
-	ID_HW = 1,
+	ID_BACK = 0,
+	ID_HW,
 	ID_CONSOLE,
 	ID_SYSTEM,
 	ID_WIFI,
@@ -397,7 +397,8 @@ static void menu_services(void)
 			return;
 		if ((key == '\n' || key == KEY_ENTER || key == '\r') && n > 0) {
 			idx = ui_get_cursor();
-			/* remap to unit */
+			if (idx < 0 || idx >= n)
+				continue;
 			{
 				int i = 0;
 				for (s = SYSTEM_KNOWN_SERVICES; s->unit; s++) {
