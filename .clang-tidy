@@ -1,6 +1,8 @@
 Checks: >
   clang-diagnostic-*,
   clang-analyzer-*,
+  # Annex K *_s APIs are optional and unavailable on musl; snprintf/memset
+  # with explicit lengths are the portable safe path — keep these suppressed.
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
   -clang-analyzer-security.ArrayBound,
   bugprone-*,
